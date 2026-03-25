@@ -509,7 +509,9 @@ export abstract class BaseGameScene extends Phaser.Scene {
     ui.updateZlorps(invState.zlorps);
     ui.updateKeys(invState.keys);
     ui.updateAmmo(invState.ammo, invState.hasBlaster);
-    ui.updateWeapon(invState.selectedWeapon === 'sword' ? '⚔ Sword' : '🔫 A-OK47');
+    ui.updateWeapon(invState.hasLegendSword
+      ? (invState.selectedWeapon === 'sword' ? '[Sword]' : '[A-OK47]')
+      : 'Unarmed');
   }
 
   protected getUI(): UIScene | undefined {

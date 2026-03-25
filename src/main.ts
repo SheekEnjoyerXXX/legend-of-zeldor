@@ -33,4 +33,10 @@ const config: Phaser.Types.Core.GameConfig = {
   ],
 };
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+
+// Expose for dev console access
+// Expose for dev console access
+if (import.meta.env.DEV) {
+  (window as unknown as Record<string, unknown>).game = game;
+}
