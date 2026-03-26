@@ -24,7 +24,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     key: 'gobdwarf', name: 'Gobdwarf', hp: 2, speed: 40, damage: 1,
     chaseRange: 80, attackRange: 16, behavior: 'chase', projectile: false,
     spriteKey: 'gobdwarf',
-    drops: [{ item: 'zlorp', chance: 0.5 }, { item: 'heart', chance: 0.2 }],
+    drops: [{ item: 'zlorp', chance: 0.5 }, { item: 'heart', chance: 0.3 }],
   },
   slime_modem: {
     key: 'slime_modem', name: 'Slime Modem', hp: 3, speed: 25, damage: 1,
@@ -39,9 +39,9 @@ export const ENEMIES: Record<string, EnemyDef> = {
     drops: [{ item: 'zlorp', chance: 0.6 }, { item: 'ammo', chance: 0.3 }],
   },
   obamasphere_laser: {
-    key: 'obamasphere_laser', name: 'Laser Sphere', hp: 4, speed: 35, damage: 1,
+    key: 'obamasphere_laser', name: 'Laser Sphere', hp: 3, speed: 35, damage: 1,
     chaseRange: 140, attackRange: 100, behavior: 'float', projectile: true,
-    projectileSpeed: 120, projectileCooldown: 2000,
+    projectileSpeed: 120, projectileCooldown: 2200,
     spriteKey: 'obamasphere_laser',
     drops: [{ item: 'zlorp', chance: 0.5 }, { item: 'ammo', chance: 0.4 }],
   },
@@ -52,7 +52,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     drops: [{ item: 'zlorp', chance: 0.3 }, { item: 'heart', chance: 0.2 }],
   },
   firewall_skeleton: {
-    key: 'firewall_skeleton', name: 'Firewall Skeleton', hp: 5, speed: 35, damage: 2,
+    key: 'firewall_skeleton', name: 'Firewall Skeleton', hp: 4, speed: 35, damage: 2,
     chaseRange: 90, attackRange: 20, behavior: 'patrol', projectile: true,
     projectileSpeed: 100, projectileCooldown: 2500,
     spriteKey: 'firewall_skeleton',

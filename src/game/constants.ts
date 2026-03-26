@@ -16,8 +16,8 @@ export const PLAYER_INVULN_TIME = 1000; // ms
 export const PLAYER_KNOCKBACK = 120;
 
 // Combat
-export const SWORD_DAMAGE = 1;
-export const BLASTER_DAMAGE = 2;
+export const SWORD_DAMAGE = 2;
+export const BLASTER_DAMAGE = 3;
 export const BLASTER_COOLDOWN = 400;
 export const BLASTER_MAX_AMMO = 30;
 export const SHIELD_BLOCK_ARC = 90; // degrees

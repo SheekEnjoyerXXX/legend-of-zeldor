@@ -7,6 +7,7 @@ export function generateAllTextures(scene: Phaser.Scene) {
   genPlayerTextures(scene);
   genEnemyTextures(scene);
   genNPCTextures(scene);
+  genAnimalTextures(scene);
   genBossTextures(scene);
   genItemTextures(scene);
   genUITextures(scene);
@@ -118,18 +119,57 @@ function genPlayerTextures(scene: Phaser.Scene) {
   makeFrameTex(scene, 'linkler', W, H, frames);
 
   // Attack frames (sword slash) - 4 directions x 2 frames
+  // Detailed sword with blade edge highlight, dark spine, gold cross-guard and pommel
   const attackFrames: ((ctx: CanvasRenderingContext2D) => void)[] = [];
   for (let dir = 0; dir < 4; dir++) {
     for (let f = 0; f < 2; f++) {
       attackFrames.push((ctx) => {
         drawLinkler(ctx, dir, 0);
-        // Draw sword
-        ctx.fillStyle = hex(0xcccccc);
-        const sf = f === 0 ? 0 : 1;
-        if (dir === 0) { rect(ctx, 12 + sf, 8, 3, 8, 0xcccccc); rect(ctx, 12 + sf, 7, 3, 2, COLORS.GOLD); }
-        else if (dir === 1) { rect(ctx, -3 - sf, 6, 7, 3, 0xcccccc); rect(ctx, 3 - sf, 6, 2, 3, COLORS.GOLD); }
-        else if (dir === 2) { rect(ctx, 12 + sf, 6, 7, 3, 0xcccccc); rect(ctx, 12 + sf, 6, 2, 3, COLORS.GOLD); }
-        else { rect(ctx, 5 + sf, -4, 3, 8, 0xcccccc); rect(ctx, 5 + sf, 3, 3, 2, COLORS.GOLD); }
+        const sf = f === 0 ? 0 : 2;
+        if (dir === 0) { // down — sword swings right side
+          // Blade shadow/spine
+          rect(ctx, 13 + sf, 6, 1, 11, 0x999999);
+          // Blade core
+          rect(ctx, 12 + sf, 6, 1, 11, 0xddddef);
+          // Blade bright edge
+          rect(ctx, 14 + sf, 6, 1, 11, 0xeeeeff);
+          // Blade tip (pointed)
+          rect(ctx, 13 + sf, 17, 1, 2, 0xeeeeff);
+          // Cross-guard
+          rect(ctx, 10 + sf, 5, 7, 2, COLORS.GOLD);
+          rect(ctx, 11 + sf, 5, 5, 2, 0xffdd44);
+          // Handle
+          rect(ctx, 13 + sf, 3, 1, 2, 0x6b4226);
+          // Pommel
+          pixel(ctx, 13 + sf, 2, COLORS.RED);
+        } else if (dir === 1) { // left — sword extends left
+          rect(ctx, -4 - sf, 7, 10, 1, 0x999999);
+          rect(ctx, -4 - sf, 6, 10, 1, 0xddddef);
+          rect(ctx, -4 - sf, 8, 10, 1, 0xeeeeff);
+          rect(ctx, -5 - sf, 7, 2, 1, 0xeeeeff); // tip
+          rect(ctx, 5 - sf, 5, 2, 5, COLORS.GOLD);
+          rect(ctx, 5 - sf, 6, 2, 3, 0xffdd44);
+          rect(ctx, 7 - sf, 7, 2, 1, 0x6b4226);
+          pixel(ctx, 9 - sf, 7, COLORS.RED);
+        } else if (dir === 2) { // right — sword extends right
+          rect(ctx, 10 + sf, 7, 10, 1, 0x999999);
+          rect(ctx, 10 + sf, 6, 10, 1, 0xddddef);
+          rect(ctx, 10 + sf, 8, 10, 1, 0xeeeeff);
+          rect(ctx, 20 + sf, 7, 2, 1, 0xeeeeff); // tip
+          rect(ctx, 9 + sf, 5, 2, 5, COLORS.GOLD);
+          rect(ctx, 9 + sf, 6, 2, 3, 0xffdd44);
+          rect(ctx, 7 + sf, 7, 2, 1, 0x6b4226);
+          pixel(ctx, 6 + sf, 7, COLORS.RED);
+        } else { // up — sword extends upward
+          rect(ctx, 6 + sf, -6, 1, 11, 0x999999);
+          rect(ctx, 7 + sf, -6, 1, 11, 0xddddef);
+          rect(ctx, 8 + sf, -6, 1, 11, 0xeeeeff);
+          rect(ctx, 7 + sf, -8, 1, 2, 0xeeeeff); // tip
+          rect(ctx, 4 + sf, 4, 7, 2, COLORS.GOLD);
+          rect(ctx, 5 + sf, 4, 5, 2, 0xffdd44);
+          rect(ctx, 7 + sf, 6, 1, 2, 0x6b4226);
+          pixel(ctx, 7 + sf, 8, COLORS.RED);
+        }
       });
     }
   }
@@ -990,6 +1030,137 @@ function genNPCTextures(scene: Phaser.Scene) {
     rect(ctx, 6, 6, 4, 1, 0xcc9977); // mouth
     rect(ctx, 5, 18, 2, 2, COLORS.BLACK); rect(ctx, 9, 18, 2, 2, COLORS.BLACK); // shoes
   });
+}
+
+// ---- ANIMALS ----
+function genAnimalTextures(scene: Phaser.Scene) {
+  // Chicken - small white bird with red comb, 2 frames for bobbing
+  makeFrameTex(scene, 'chicken', 10, 10, [
+    (ctx) => {
+      // Body
+      rect(ctx, 2, 4, 6, 4, 0xf5f5dc); // cream white body
+      rect(ctx, 3, 5, 4, 2, 0xffffff); // belly highlight
+      // Head
+      rect(ctx, 5, 2, 4, 3, 0xf5f5dc);
+      // Comb (red)
+      rect(ctx, 6, 1, 2, 1, 0xcc2222);
+      pixel(ctx, 7, 0, 0xee3333);
+      // Eye
+      pixel(ctx, 7, 3, COLORS.BLACK);
+      // Beak
+      pixel(ctx, 9, 3, 0xffaa00);
+      // Legs
+      rect(ctx, 3, 8, 1, 2, 0xffaa00);
+      rect(ctx, 6, 8, 1, 2, 0xffaa00);
+      // Tail feather
+      pixel(ctx, 1, 3, 0xe8e8d0);
+      pixel(ctx, 1, 4, 0xe8e8d0);
+      // Wing
+      rect(ctx, 3, 4, 2, 2, 0xe8e8d0);
+    },
+    (ctx) => {
+      // Frame 2 - slightly shifted (pecking)
+      rect(ctx, 2, 5, 6, 4, 0xf5f5dc);
+      rect(ctx, 3, 6, 4, 2, 0xffffff);
+      rect(ctx, 5, 3, 4, 3, 0xf5f5dc);
+      rect(ctx, 6, 2, 2, 1, 0xcc2222);
+      pixel(ctx, 7, 1, 0xee3333);
+      pixel(ctx, 7, 4, COLORS.BLACK);
+      pixel(ctx, 9, 5, 0xffaa00); // beak down (pecking)
+      rect(ctx, 3, 9, 1, 1, 0xffaa00);
+      rect(ctx, 6, 9, 1, 1, 0xffaa00);
+      pixel(ctx, 1, 4, 0xe8e8d0);
+      pixel(ctx, 1, 5, 0xe8e8d0);
+      rect(ctx, 3, 5, 2, 2, 0xe8e8d0);
+    },
+  ]);
+
+  // Cat - small orange tabby, 2 frames
+  makeFrameTex(scene, 'cat', 12, 10, [
+    (ctx) => {
+      // Body
+      rect(ctx, 2, 4, 7, 4, 0xdd8833); // orange body
+      rect(ctx, 3, 5, 5, 2, 0xee9944); // lighter belly
+      // Stripes
+      rect(ctx, 3, 4, 1, 3, 0xbb6622);
+      rect(ctx, 6, 4, 1, 3, 0xbb6622);
+      // Head
+      rect(ctx, 1, 1, 5, 4, 0xdd8833);
+      rect(ctx, 2, 2, 3, 2, 0xee9944); // face highlight
+      // Ears (triangular)
+      pixel(ctx, 1, 0, 0xdd8833);
+      pixel(ctx, 5, 0, 0xdd8833);
+      pixel(ctx, 1, 0, 0xffaa55); // inner ear
+      pixel(ctx, 5, 0, 0xffaa55);
+      // Eyes
+      pixel(ctx, 2, 2, 0x44cc44); // green eyes
+      pixel(ctx, 4, 2, 0x44cc44);
+      // Nose
+      pixel(ctx, 3, 3, 0xff8888);
+      // Tail (curled up)
+      rect(ctx, 9, 3, 1, 3, 0xdd8833);
+      rect(ctx, 10, 2, 1, 2, 0xdd8833);
+      pixel(ctx, 11, 2, 0xbb6622);
+      // Legs
+      rect(ctx, 2, 8, 1, 2, 0xdd8833);
+      rect(ctx, 5, 8, 1, 2, 0xdd8833);
+      rect(ctx, 7, 8, 1, 2, 0xdd8833);
+    },
+    (ctx) => {
+      // Frame 2 - walking
+      rect(ctx, 2, 4, 7, 4, 0xdd8833);
+      rect(ctx, 3, 5, 5, 2, 0xee9944);
+      rect(ctx, 3, 4, 1, 3, 0xbb6622);
+      rect(ctx, 6, 4, 1, 3, 0xbb6622);
+      rect(ctx, 1, 1, 5, 4, 0xdd8833);
+      rect(ctx, 2, 2, 3, 2, 0xee9944);
+      pixel(ctx, 1, 0, 0xdd8833);
+      pixel(ctx, 5, 0, 0xdd8833);
+      pixel(ctx, 2, 2, 0x44cc44);
+      pixel(ctx, 4, 2, 0x44cc44);
+      pixel(ctx, 3, 3, 0xff8888);
+      rect(ctx, 9, 4, 1, 2, 0xdd8833); // tail lower
+      rect(ctx, 10, 3, 1, 2, 0xdd8833);
+      pixel(ctx, 11, 3, 0xbb6622);
+      // Legs shifted
+      rect(ctx, 3, 8, 1, 2, 0xdd8833);
+      rect(ctx, 6, 8, 1, 2, 0xdd8833);
+      rect(ctx, 8, 8, 1, 2, 0xdd8833);
+    },
+  ]);
+
+  // Frog - small green frog, 2 frames
+  makeFrameTex(scene, 'frog', 10, 8, [
+    (ctx) => {
+      // Body
+      rect(ctx, 2, 3, 6, 3, 0x44aa44);
+      rect(ctx, 3, 4, 4, 1, 0x66cc66); // belly
+      // Head
+      rect(ctx, 2, 1, 6, 3, 0x44aa44);
+      rect(ctx, 3, 2, 4, 1, 0x55bb55);
+      // Eyes (bulging)
+      rect(ctx, 1, 0, 2, 2, 0x44aa44);
+      rect(ctx, 7, 0, 2, 2, 0x44aa44);
+      pixel(ctx, 1, 0, 0xffffff); pixel(ctx, 2, 0, COLORS.BLACK);
+      pixel(ctx, 7, 0, COLORS.BLACK); pixel(ctx, 8, 0, 0xffffff);
+      // Legs
+      rect(ctx, 1, 6, 2, 2, 0x44aa44);
+      rect(ctx, 7, 6, 2, 2, 0x44aa44);
+    },
+    (ctx) => {
+      // Frame 2 - crouched
+      rect(ctx, 2, 4, 6, 2, 0x44aa44);
+      rect(ctx, 3, 4, 4, 1, 0x66cc66);
+      rect(ctx, 2, 2, 6, 3, 0x44aa44);
+      rect(ctx, 3, 3, 4, 1, 0x55bb55);
+      rect(ctx, 1, 1, 2, 2, 0x44aa44);
+      rect(ctx, 7, 1, 2, 2, 0x44aa44);
+      pixel(ctx, 1, 1, 0xffffff); pixel(ctx, 2, 1, COLORS.BLACK);
+      pixel(ctx, 7, 1, COLORS.BLACK); pixel(ctx, 8, 1, 0xffffff);
+      rect(ctx, 0, 6, 3, 2, 0x44aa44); // legs spread
+      rect(ctx, 7, 6, 3, 2, 0x44aa44);
+    },
+  ]);
 }
 
 // ---- BOSSES ----

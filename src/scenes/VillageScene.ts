@@ -216,6 +216,14 @@ export class VillageScene extends BaseGameScene {
       });
     }
 
+    // Village animals for atmosphere
+    this.spawnAnimal(12 * T, 8 * T, 'chicken');
+    this.spawnAnimal(18 * T, 17 * T, 'chicken');
+    this.spawnAnimal(8 * T, 20 * T, 'cat');
+    this.spawnAnimal(25 * T, 15 * T, 'cat');
+    this.spawnAnimal(6 * T, 16 * T, 'frog');
+    this.spawnAnimal(19 * T, 22 * T, 'frog');
+
     // Heart pickup near start
     this.spawnPickup({
       type: 'heart', spriteKey: 'heart_pickup',
@@ -296,6 +304,66 @@ export class VillageScene extends BaseGameScene {
         this.showDialogByKey('pickle_farewell');
       });
     }
+  }
+
+  private spawnAnimal(x: number, y: number, spriteKey: string): void {
+    const animal = this.physics.add.sprite(x, y, spriteKey, 0);
+    animal.setDepth(6).setCollideWorldBounds(true);
+
+    // Create simple idle animation
+    const animKey = `${spriteKey}_idle`;
+    if (!this.anims.exists(animKey)) {
+      this.anims.create({
+        key: animKey,
+        frames: this.anims.generateFrameNumbers(spriteKey, { start: 0, end: 1 }),
+        frameRate: spriteKey === 'frog' ? 2 : 3,
+        repeat: -1,
+      });
+    }
+    animal.anims.play(animKey);
+
+    // Wander behavior
+    let wanderTimer = 0;
+    const isFrog = spriteKey === 'frog';
+    this.time.addEvent({
+      delay: 100, loop: true, callback: () => {
+        if (!animal.active) return;
+        wanderTimer++;
+
+        // Frog hops occasionally, others wander smoothly
+        if (isFrog) {
+          if (wanderTimer % 30 === 0) {
+            const a = Math.random() * Math.PI * 2;
+            animal.setVelocity(Math.cos(a) * 60, Math.sin(a) * 60);
+          } else if (wanderTimer % 30 === 5) {
+            animal.setVelocity(0, 0);
+          }
+        } else {
+          if (wanderTimer % 25 === 0) {
+            const a = Math.random() * Math.PI * 2;
+            const speed = spriteKey === 'cat' ? 20 : 25;
+            animal.setVelocity(Math.cos(a) * speed, Math.sin(a) * speed);
+          }
+          if (wanderTimer % 25 === 15) {
+            animal.setVelocity(0, 0);
+          }
+        }
+
+        // Flee from player if too close
+        const dist = Phaser.Math.Distance.Between(
+          this.player.sprite.x, this.player.sprite.y, animal.x, animal.y
+        );
+        if (dist < 24) {
+          const angle = Phaser.Math.Angle.Between(
+            this.player.sprite.x, this.player.sprite.y, animal.x, animal.y
+          );
+          const fleeSpeed = isFrog ? 80 : 50;
+          animal.setVelocity(Math.cos(angle) * fleeSpeed, Math.sin(angle) * fleeSpeed);
+        }
+      },
+    });
+
+    this.physics.add.collider(animal, this.walls);
   }
 
   protected playMusic(): void {

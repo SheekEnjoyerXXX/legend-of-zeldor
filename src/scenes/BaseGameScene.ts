@@ -813,23 +813,28 @@ export abstract class BaseGameScene extends Phaser.Scene {
   /** Show a visual sword swing arc in the attack direction */
   private showSwordSwing(dir: Direction): void {
     const offsets: Record<Direction, { x: number; y: number; angle: number }> = {
-      right: { x: 14, y: 0, angle: 0 },
-      down: { x: 0, y: 14, angle: 90 },
-      left: { x: -14, y: 0, angle: 180 },
-      up: { x: 0, y: -14, angle: 270 },
+      right: { x: 16, y: 0, angle: 0 },
+      down: { x: 0, y: 16, angle: 90 },
+      left: { x: -16, y: 0, angle: 180 },
+      up: { x: 0, y: -16, angle: 270 },
     };
     const o = offsets[dir];
     const sx = this.player.sprite.x + o.x;
     const sy = this.player.sprite.y + o.y;
 
-    // Sword arc - a small colored arc shape
+    // Outer bright arc (sword slash trail)
     const arc = this.add.graphics().setDepth(15);
-    arc.fillStyle(0xcccccc, 0.8);
-    arc.slice(sx, sy, 12, Phaser.Math.DegToRad(o.angle - 60), Phaser.Math.DegToRad(o.angle + 60), false);
+    arc.fillStyle(0xeeeeff, 0.7);
+    arc.slice(sx, sy, 16, Phaser.Math.DegToRad(o.angle - 55), Phaser.Math.DegToRad(o.angle + 55), false);
+    arc.fillPath();
+    // Inner bright core
+    arc.fillStyle(0xffffff, 0.9);
+    arc.slice(sx, sy, 10, Phaser.Math.DegToRad(o.angle - 35), Phaser.Math.DegToRad(o.angle + 35), false);
     arc.fillPath();
 
     this.tweens.add({
-      targets: arc, alpha: 0, duration: 200,
+      targets: arc, alpha: 0, scaleX: 1.3, scaleY: 1.3, duration: 180,
+      ease: 'Quad.easeOut',
       onComplete: () => arc.destroy(),
     });
   }

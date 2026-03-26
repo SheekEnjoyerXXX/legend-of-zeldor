@@ -170,17 +170,17 @@ export class Player implements Damageable {
 
   getInteractPoint(): { x: number; y: number } {
     const offsets: Record<Direction, { x: number; y: number }> = {
-      down: { x: 0, y: 16 },
-      up: { x: 0, y: -16 },
-      left: { x: -16, y: 0 },
-      right: { x: 16, y: 0 },
+      down: { x: 0, y: 20 },
+      up: { x: 0, y: -20 },
+      left: { x: -20, y: 0 },
+      right: { x: 20, y: 0 },
     };
     const o = offsets[this.direction];
     return { x: this.sprite.x + o.x, y: this.sprite.y + o.y };
   }
 
   getAttackRect(): Phaser.Geom.Rectangle {
-    const w = 20, h = 20;
+    const w = 28, h = 28;
     const p = this.getInteractPoint();
     return new Phaser.Geom.Rectangle(p.x - w / 2, p.y - h / 2, w, h);
   }
