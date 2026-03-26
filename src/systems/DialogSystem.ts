@@ -75,7 +75,7 @@ export class DialogSystem {
 
     this.typeTimer?.destroy();
     this.typeTimer = this.scene.time.addEvent({
-      delay: 25,
+      delay: 35,
       repeat: this.fullText.length - 1,
       callback: () => {
         this.displayedChars++;

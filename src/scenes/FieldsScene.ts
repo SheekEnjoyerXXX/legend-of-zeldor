@@ -100,12 +100,15 @@ export class FieldsScene extends BaseGameScene {
     }
 
     // Transitions
-    this.addTransition(SCENES.VILLAGE, 0, 11 * T, T, 4 * T, 460, 200);
-    this.addTransition(SCENES.GATES, 17 * T, 0, 4 * T, T, 240, 380);
+    this.addTransition(SCENES.VILLAGE, 0, 11 * T, 2 * T, 4 * T, 460, 200);
+    this.addTransition(SCENES.GATES, 17 * T, 0, 4 * T, 2 * T, 240, 380);
   }
 
   populate(): void {
     const T = TILE_SIZE;
+
+    // Mark reaching fields for story progression
+    this.quest.setFlag('reached_fields');
 
     // Barefoot Bob
     this.spawnNPC({
@@ -160,6 +163,12 @@ export class FieldsScene extends BaseGameScene {
     this.spawnPickup({ type: 'zlorp', spriteKey: 'zlorp', x: 36 * T, y: 3 * T });
     this.spawnPickup({ type: 'zlorp', spriteKey: 'zlorp', x: 37 * T, y: 3 * T });
 
+    // Fish Slapper - reward for exploring near the ruined watchtower
+    this.spawnPickup({
+      type: 'item', itemKey: 'fish_slapper', spriteKey: 'heart_pickup',
+      x: 34 * T, y: 4 * T,
+    });
+
     // Pickle Toss NPC
     this.spawnNPC({
       key: 'pickle_toss', spriteKey: 'pickle',
@@ -168,20 +177,7 @@ export class FieldsScene extends BaseGameScene {
     });
 
     // Save point
-    const crystal = this.add.rectangle(18 * T + T / 2, 12 * T, 8, 12, 0x44aaff).setDepth(4);
-    this.tweens.add({ targets: crystal, alpha: 0.5, duration: 1000, yoyo: true, repeat: -1 });
-    this.time.addEvent({
-      delay: 200, loop: true, callback: () => {
-        if (!this.dialog.active) {
-          const dist = Phaser.Math.Distance.Between(
-            this.player.sprite.x, this.player.sprite.y, crystal.x, crystal.y
-          );
-          if (dist < 20 && this.player.isKeyJustDown('e')) {
-            this.saveCheckpoint(crystal.x, crystal.y + 20);
-          }
-        }
-      },
-    });
+    this.spawnSaveCrystal(18 * T + T / 2, 12 * T);
   }
 
   protected onDialogComplete(npcKey: string, dialogKey: string): void {

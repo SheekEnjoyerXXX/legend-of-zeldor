@@ -1,5 +1,5 @@
 import { BaseGameScene } from './BaseGameScene';
-import { SCENES, TILE_SIZE, COLORS } from '../game/constants';
+import { SCENES, TILE_SIZE, COLORS, GAME_WIDTH, GAME_HEIGHT } from '../game/constants';
 
 export class DigitalRealmScene extends BaseGameScene {
   private glitchTimer = 0;
@@ -91,7 +91,7 @@ export class DigitalRealmScene extends BaseGameScene {
     });
 
     // Transitions
-    this.addTransition(SCENES.SEWERS, 13 * T, 0, 4 * T, T, 240, 440);
+    this.addTransition(SCENES.SEWERS, 13 * T, 0, 4 * T, 2 * T, 240, 440);
   }
 
   private createTeleportPad(x1: number, y1: number, x2: number, y2: number): void {
@@ -163,6 +163,12 @@ export class DigitalRealmScene extends BaseGameScene {
     this.spawnPickup({ type: 'zlorp', spriteKey: 'zlorp', x: 4 * T, y: 28 * T });
     this.spawnPickup({ type: 'zlorp', spriteKey: 'zlorp', x: 26 * T, y: 28 * T });
 
+    // Pixel Hammer - reward for navigating the maze
+    this.spawnPickup({
+      type: 'item', itemKey: 'pixel_hammer', spriteKey: 'pushblock',
+      x: 4 * T, y: 18 * T,
+    });
+
     // Captcha puzzle area
     this.spawnNPC({
       key: 'glitch_sign', spriteKey: 'sign',
@@ -178,18 +184,7 @@ export class DigitalRealmScene extends BaseGameScene {
     });
 
     // Save crystal
-    const crystal = this.add.rectangle(15 * T, 32 * T, 8, 12, 0x44aaff).setDepth(4);
-    this.tweens.add({ targets: crystal, alpha: 0.5, duration: 1000, yoyo: true, repeat: -1 });
-    this.time.addEvent({
-      delay: 200, loop: true, callback: () => {
-        if (!this.dialog.active) {
-          const dist = Phaser.Math.Distance.Between(this.player.sprite.x, this.player.sprite.y, crystal.x, crystal.y);
-          if (dist < 20 && this.player.isKeyJustDown('e')) {
-            this.saveCheckpoint(crystal.x, crystal.y + 20);
-          }
-        }
-      },
-    });
+    this.spawnSaveCrystal(15 * T, 32 * T);
   }
 
   update(time: number, delta: number): void {
@@ -205,5 +200,25 @@ export class DigitalRealmScene extends BaseGameScene {
 
   protected playMusic(): void {
     this.startMusic('music_digital');
+
+    // Scanline overlay effect (single graphics object instead of 80 rects)
+    const scanlines = this.add.graphics().setScrollFactor(0).setDepth(50).setAlpha(0.15);
+    scanlines.fillStyle(0x000000);
+    for (let y = 0; y < GAME_HEIGHT; y += 4) {
+      scanlines.fillRect(0, y, GAME_WIDTH, 1);
+    }
+
+    // Random pixel corruption flashes
+    this.time.addEvent({
+      delay: 3000, loop: true, callback: () => {
+        const cx = this.player.sprite.x + (Math.random() - 0.5) * 100;
+        const cy = this.player.sprite.y + (Math.random() - 0.5) * 60;
+        const glitch = this.add.rectangle(cx, cy, 8 + Math.random() * 30, 2, 0x00ff00, 0.6).setDepth(40);
+        this.tweens.add({
+          targets: glitch, alpha: 0, scaleX: 0, duration: 200,
+          onComplete: () => glitch.destroy(),
+        });
+      },
+    });
   }
 }

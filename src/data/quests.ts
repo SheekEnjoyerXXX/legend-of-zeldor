@@ -12,6 +12,25 @@ export interface QuestReward {
   health?: number;
 }
 
+export interface StoryStep {
+  objective: string;
+  completionFlag?: string;
+  scene?: string;
+}
+
+/** Main story progression - each step unlocks the next when its flag is set */
+export const STORY_STEPS: StoryStep[] = [
+  { objective: 'Talk to Elder Grumbold in the village', completionFlag: 'talked_to_elder', scene: 'VillageScene' },
+  { objective: 'Find the Legend Sword in the Shrine (north)', completionFlag: 'has_legend_sword', scene: 'ShrineScene' },
+  { objective: 'Travel east to the Fields of Mild Peril', completionFlag: 'reached_fields', scene: 'FieldsScene' },
+  { objective: 'Head north to the Gates of Time', completionFlag: 'reached_gates', scene: 'GatesScene' },
+  { objective: 'Activate 3 switches and defeat the Gatekeeper', completionFlag: 'gatekeeper_defeated', scene: 'GatesScene' },
+  { objective: 'Navigate the Digital Realm to the Sewers', completionFlag: 'reached_sewers', scene: 'DigitalRealmScene' },
+  { objective: 'Defeat King Slop.exe in the Meme Sewers', completionFlag: 'sewer_boss_defeated', scene: 'MemeSewersScene' },
+  { objective: 'Storm the Fortress and defeat Shreek!', completionFlag: 'shreek_defeated', scene: 'FortressScene' },
+  { objective: 'Rescue Princess Zeldor!' },
+];
+
 export const QUESTS: Record<string, QuestDef> = {
   chicken_chase: {
     key: 'chicken_chase', name: 'Chicken Revolt',
@@ -36,17 +55,5 @@ export const QUESTS: Record<string, QuestDef> = {
     description: 'Make a Turkish doner to pass the Spice Gate.',
     completionFlag: 'quest_doner_done',
     reward: { health: 99 },
-  },
-  pickle_toss: {
-    key: 'pickle_toss', name: 'Pickle Toss Champion',
-    description: 'Win the Pickle Toss mini-game.',
-    completionFlag: 'quest_pickle_toss_done',
-    reward: { zlorps: 20, item: 'mystery_pickle' },
-  },
-  target_practice: {
-    key: 'target_practice', name: 'Target Practice',
-    description: 'Hit 5 targets with the A-OK 47.',
-    completionFlag: 'quest_target_done',
-    reward: { item: 'ammo_upgrade' },
   },
 };

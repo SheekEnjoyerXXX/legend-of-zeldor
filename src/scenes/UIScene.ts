@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENES, GAME_WIDTH, COLORS } from '../game/constants';
+import { SCENES, GAME_WIDTH, GAME_HEIGHT, COLORS } from '../game/constants';
 
 export class UIScene extends Phaser.Scene {
   private heartIcons: Phaser.GameObjects.Image[] = [];
@@ -8,12 +8,17 @@ export class UIScene extends Phaser.Scene {
   private keyText!: Phaser.GameObjects.Text;
   private weaponText!: Phaser.GameObjects.Text;
   private areaText!: Phaser.GameObjects.Text;
+  private questText!: Phaser.GameObjects.Text;
 
   constructor() {
     super(SCENES.UI);
   }
 
   create(): void {
+    // Reset arrays — Phaser reuses scene instances, so create() may run multiple
+    // times on the same object. Old game objects are destroyed on shutdown.
+    this.heartIcons = [];
+
     // Top HUD bar background
     this.add.rectangle(GAME_WIDTH / 2, 10, GAME_WIDTH, 20, 0x000000, 0.7).setScrollFactor(0);
 
@@ -47,6 +52,26 @@ export class UIScene extends Phaser.Scene {
     this.areaText = this.add.text(GAME_WIDTH / 2, 28, '', {
       fontSize: '8px', fontFamily: 'monospace', color: '#888888',
     }).setOrigin(0.5).setScrollFactor(0).setAlpha(0);
+
+    // Quest objective (bottom left)
+    this.questText = this.add.text(6, GAME_HEIGHT - 14, '', {
+      fontSize: '7px', fontFamily: 'monospace', color: '#aaccff',
+    }).setScrollFactor(0).setAlpha(0.8);
+
+    // Control hints (bottom right)
+    const controlLines = [
+      'J:Sword  K:Shield',
+      'L:Blast  E:Talk',
+      'Tab:Switch  I:Inv',
+    ];
+    const controlBg = this.add.rectangle(
+      GAME_WIDTH - 58, GAME_HEIGHT - 22, 112, 34, 0x000000, 0.5
+    ).setScrollFactor(0).setOrigin(0.5);
+    for (let i = 0; i < controlLines.length; i++) {
+      this.add.text(GAME_WIDTH - 112, GAME_HEIGHT - 36 + i * 10, controlLines[i], {
+        fontSize: '7px', fontFamily: 'monospace', color: '#888888',
+      }).setScrollFactor(0).setAlpha(0.7);
+    }
   }
 
   updateHealth(current: number, max: number): void {
@@ -82,6 +107,10 @@ export class UIScene extends Phaser.Scene {
 
   updateWeapon(weapon: string): void {
     this.weaponText.setText(weapon);
+  }
+
+  updateQuestObjective(text: string): void {
+    this.questText.setText(text);
   }
 
   showAreaName(name: string): void {

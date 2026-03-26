@@ -13,6 +13,7 @@ import { MemeSewersScene } from './scenes/MemeSewersScene';
 import { FortressScene } from './scenes/FortressScene';
 import { FinaleScene } from './scenes/FinaleScene';
 import { UIScene } from './scenes/UIScene';
+import { InteriorScene } from './scenes/InteriorScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   ...gameConfig,
@@ -29,6 +30,7 @@ const config: Phaser.Types.Core.GameConfig = {
     MemeSewersScene,
     FortressScene,
     FinaleScene,
+    InteriorScene,
     UIScene,
   ],
 };

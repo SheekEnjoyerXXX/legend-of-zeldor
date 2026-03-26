@@ -85,7 +85,7 @@ export class ShrineScene extends BaseGameScene {
     });
 
     // Transitions
-    this.addTransition(SCENES.VILLAGE, 13 * T, (rows - 1) * T, 4 * T, T, 240, 20);
+    this.addTransition(SCENES.VILLAGE, 13 * T, (rows - 2) * T, 4 * T, 2 * T, 240, 20);
 
     // Entrance plaque
     const plaqueZone = this.add.zone(15 * T, 26 * T, 3 * T, 2 * T);
@@ -245,6 +245,7 @@ export class ShrineScene extends BaseGameScene {
           sword.destroy();
           this.playSfx('sfx_pickup');
           this.inventory.addItem('legend_sword');
+          this.quest.setFlag('has_legend_sword');
           this.showDialogByKey('legend_sword_get');
         }
       },

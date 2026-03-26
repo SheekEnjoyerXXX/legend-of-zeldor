@@ -70,5 +70,6 @@ export const SCENES = {
   FORTRESS: 'FortressScene',
   FINALE: 'FinaleScene',
   UI: 'UIScene',
+  INTERIOR: 'InteriorScene',
   GAMEOVER: 'GameOverScene',
 } as const;

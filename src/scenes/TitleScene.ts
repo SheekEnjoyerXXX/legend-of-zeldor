@@ -1,18 +1,20 @@
 import Phaser from 'phaser';
 import { SCENES, GAME_WIDTH, GAME_HEIGHT, COLORS, IS_DEV } from '../game/constants';
-import { hasSaveData } from '../game/save';
+import { hasSaveData, loadGame, deleteSave } from '../game/save';
 
 export class TitleScene extends Phaser.Scene {
   private menuItems: Phaser.GameObjects.Text[] = [];
   private selectedIndex = 0;
   private cursorText!: Phaser.GameObjects.Text;
   private titleMusic?: Phaser.Sound.BaseSound;
+  private confirmOverlay?: Phaser.GameObjects.Container;
 
   constructor() {
     super(SCENES.TITLE);
   }
 
   create(): void {
+    this.confirmOverlay = undefined;
     this.cameras.main.setBackgroundColor(0x0a0a1a);
 
     // Starfield background
@@ -27,7 +29,7 @@ export class TitleScene extends Phaser.Scene {
       });
     }
 
-    // Title text - "LEGEND OF ZELDOR"
+    // Title text
     const titleY = 50;
     this.add.text(GAME_WIDTH / 2, titleY, 'LEGEND OF', {
       fontSize: '14px', fontFamily: 'monospace', color: '#8888cc',
@@ -38,7 +40,6 @@ export class TitleScene extends Phaser.Scene {
       stroke: '#000000', strokeThickness: 4,
     }).setOrigin(0.5);
 
-    // Pulsing glow on title
     this.tweens.add({
       targets: mainTitle, scaleX: 1.05, scaleY: 1.05,
       duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
@@ -50,7 +51,6 @@ export class TitleScene extends Phaser.Scene {
     this.addFloatingCharacter('pickle', 130, 170, 0);
     this.addFloatingCharacter('obamasphere', 350, 180, 0);
 
-    // Shreek lurking in corner
     if (this.textures.exists('shreek')) {
       const shreek = this.add.sprite(430, 250, 'shreek', 0).setScale(0.5).setAlpha(0.4);
       this.tweens.add({
@@ -63,7 +63,7 @@ export class TitleScene extends Phaser.Scene {
     const menuStartY = 200;
     const menuSpacing = 20;
 
-    const items = ['Start Game', 'Continue', 'Controls', 'Quit'];
+    const items = ['New Game', 'Continue', 'Controls', 'Quit'];
     this.menuItems = items.map((label, i) => {
       const text = this.add.text(menuX, menuStartY + i * menuSpacing, label, {
         fontSize: '11px', fontFamily: 'monospace', color: '#ffffff',
@@ -74,18 +74,16 @@ export class TitleScene extends Phaser.Scene {
       return text;
     });
 
-    this.cursorText = this.add.text(0, 0, '▸', {
+    this.cursorText = this.add.text(0, 0, '>', {
       fontSize: '11px', fontFamily: 'monospace', color: '#e6c619',
     }).setOrigin(0.5);
 
     this.updateCursor();
 
-    // Subtitle
-    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 20, 'A Totally Original Adventure™', {
+    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 20, 'A Totally Original Adventure', {
       fontSize: '7px', fontFamily: 'monospace', color: '#555555',
     }).setOrigin(0.5);
 
-    // Dev mode scene selector
     if (IS_DEV) {
       this.add.text(4, 4, '[DEV MODE]', {
         fontSize: '7px', fontFamily: 'monospace', color: '#ff4444',
@@ -93,10 +91,7 @@ export class TitleScene extends Phaser.Scene {
       this.addDevSceneSelector();
     }
 
-    // Input
     this.setupInput();
-
-    // Play title music
     this.playTitleMusic();
   }
 
@@ -124,6 +119,7 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private moveMenu(dir: number): void {
+    if (this.confirmOverlay) return;
     this.selectedIndex = Phaser.Math.Wrap(this.selectedIndex + dir, 0, this.menuItems.length);
     this.updateCursor();
   }
@@ -134,16 +130,28 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private selectItem(): void {
+    if (this.confirmOverlay) return;
+
     switch (this.selectedIndex) {
-      case 0: // Start Game
-        this.titleMusic?.stop();
-        this.scene.start(SCENES.INTRO);
+      case 0: // New Game
+        if (hasSaveData()) {
+          this.showConfirmNewGame();
+        } else {
+          this.titleMusic?.stop();
+          this.scene.start(SCENES.INTRO);
+        }
         break;
       case 1: // Continue
         if (hasSaveData()) {
           this.titleMusic?.stop();
-          // Load save and go to saved scene
-          this.scene.start(SCENES.VILLAGE); // Default fallback; actual scene from save
+          const save = loadGame();
+          if (save) {
+            this.registry.set('saveData', save);
+            this.scene.start(save.currentScene, {
+              spawnX: save.checkpointX,
+              spawnY: save.checkpointY,
+            });
+          }
         }
         break;
       case 2: // Controls
@@ -155,28 +163,70 @@ export class TitleScene extends Phaser.Scene {
     }
   }
 
+  private showConfirmNewGame(): void {
+    const container = this.add.container(0, 0).setDepth(200);
+    const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 260, 80, 0x111122, 0.95);
+    const border = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 256, 76)
+      .setStrokeStyle(2, COLORS.UI_BORDER).setFillStyle(0x000000, 0);
+    const text = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 14,
+      'Start new game?\nThis will erase your saved progress.', {
+        fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', align: 'center',
+      }).setOrigin(0.5);
+    const prompt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 18,
+      '[ENTER] Yes, start over    [ESC] Cancel', {
+        fontSize: '7px', fontFamily: 'monospace', color: '#e6c619', align: 'center',
+      }).setOrigin(0.5);
+    container.add([bg, border, text, prompt]);
+    this.confirmOverlay = container;
+
+    const cleanup = () => {
+      container.destroy();
+      this.confirmOverlay = undefined;
+      this.input.keyboard?.off('keydown-ENTER', onConfirm);
+      this.input.keyboard?.off('keydown-ESC', onCancel);
+    };
+    const onConfirm = () => {
+      cleanup();
+      deleteSave();
+      this.titleMusic?.stop();
+      this.scene.start(SCENES.INTRO);
+    };
+    const onCancel = () => {
+      cleanup();
+    };
+    this.input.keyboard?.once('keydown-ENTER', onConfirm);
+    this.input.keyboard?.once('keydown-ESC', onCancel);
+  }
+
   private showControls(): void {
-    const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH - 40, GAME_HEIGHT - 40, 0x111122, 0.95).setDepth(100);
+    const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH - 30, GAME_HEIGHT - 30, 0x111122, 0.95).setDepth(100);
+    const border = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH - 26, GAME_HEIGHT - 26)
+      .setStrokeStyle(2, COLORS.UI_BORDER).setFillStyle(0x000000, 0).setDepth(100);
     const controls = [
-      'CONTROLS',
+      '--- CONTROLS ---',
       '',
-      'Arrow Keys / WASD - Move',
-      'J - Attack (sword / blaster)',
-      'K - Shield',
-      'L - Ranged Attack (A-OK 47)',
-      'E / Space - Interact / Confirm',
-      'I - Inventory',
-      'Enter - Pause',
-      'Shift - Sprint',
+      'MOVEMENT',
+      '  Arrow Keys / WASD    Move',
+      '  Shift                Sprint',
+      '',
+      'COMBAT',
+      '  J                    Attack (melee)',
+      '  K                    Shield (hold)',
+      '  L                    Shoot (A-OK 47)',
+      '',
+      'INTERACTION',
+      '  E / Space            Talk / Interact',
+      '  I                    Inventory',
+      '  Enter                Pause / Save',
       '',
       'Press any key to close',
     ];
     const text = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, controls.join('\n'), {
-      fontSize: '9px', fontFamily: 'monospace', color: '#ffffff', align: 'center',
-      lineSpacing: 4,
+      fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', align: 'left',
+      lineSpacing: 2,
     }).setOrigin(0.5).setDepth(101);
 
-    const close = () => { overlay.destroy(); text.destroy(); };
+    const close = () => { overlay.destroy(); border.destroy(); text.destroy(); };
     this.input.keyboard?.once('keydown', close);
   }
 
@@ -204,7 +254,7 @@ export class TitleScene extends Phaser.Scene {
         fontSize: '6px', fontFamily: 'monospace', color: '#ff8888',
       });
       this.input.keyboard?.on(`keydown-${s.key}`, () => {
-        if (!IS_DEV) return;
+        if (!IS_DEV || this.confirmOverlay) return;
         this.titleMusic?.stop();
         this.scene.start(s.scene, { devMode: true });
       });
@@ -214,11 +264,9 @@ export class TitleScene extends Phaser.Scene {
 
   private playTitleMusic(): void {
     try {
-      // Use Web Audio directly since decodeAudio is async
       const audioData = this.registry.get('audioData');
       if (audioData?.music_title) {
         this.titleMusic = this.sound.add('music_title', { loop: true, volume: 0.4 });
-        // Will play once decoded
         if (this.sound.locked) {
           this.sound.once('unlocked', () => this.titleMusic?.play());
         } else {
@@ -226,7 +274,7 @@ export class TitleScene extends Phaser.Scene {
         }
       }
     } catch {
-      // Audio might not be ready yet, that's fine
+      // Audio might not be ready
     }
   }
 }

@@ -1,5 +1,5 @@
 import { BaseGameScene } from './BaseGameScene';
-import { SCENES, TILE_SIZE, COLORS } from '../game/constants';
+import { SCENES, TILE_SIZE, COLORS, GAME_WIDTH, GAME_HEIGHT } from '../game/constants';
 
 export class FortressScene extends BaseGameScene {
   constructor() {
@@ -81,7 +81,7 @@ export class FortressScene extends BaseGameScene {
     }
 
     // Transitions
-    this.addTransition(SCENES.SEWERS, 13 * T, (rows - 1) * T, 4 * T, T, 240, 40);
+    this.addTransition(SCENES.SEWERS, 13 * T, (rows - 2) * T, 4 * T, 2 * T, 240, 40);
   }
 
   populate(): void {
@@ -127,18 +127,7 @@ export class FortressScene extends BaseGameScene {
     });
 
     // Save point before boss
-    const crystal = this.add.rectangle(15 * T, 9 * T, 8, 12, 0x44aaff).setDepth(4);
-    this.tweens.add({ targets: crystal, alpha: 0.5, duration: 1000, yoyo: true, repeat: -1 });
-    this.time.addEvent({
-      delay: 200, loop: true, callback: () => {
-        if (!this.dialog.active) {
-          const dist = Phaser.Math.Distance.Between(this.player.sprite.x, this.player.sprite.y, crystal.x, crystal.y);
-          if (dist < 20 && this.player.isKeyJustDown('e')) {
-            this.saveCheckpoint(crystal.x, crystal.y + 20);
-          }
-        }
-      },
-    });
+    this.spawnSaveCrystal(15 * T, 9 * T);
 
     // Pick the Pickle final appearance
     this.spawnNPC({
@@ -308,10 +297,15 @@ export class FortressScene extends BaseGameScene {
 
         this.persistState();
         this.stopMusic();
-        this.cameras.main.fadeOut(1000);
-        this.cameras.main.once('camerafadeoutcomplete', () => {
-          this.cleanup();
-          this.scene.start(SCENES.FINALE);
+        const overlay = this.add.rectangle(
+          GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000
+        ).setScrollFactor(0).setDepth(9999).setAlpha(0);
+        this.tweens.add({
+          targets: overlay, alpha: 1, duration: 1000,
+          onComplete: () => {
+            this.cleanup();
+            this.scene.start(SCENES.FINALE);
+          },
         });
       });
     });
@@ -319,5 +313,24 @@ export class FortressScene extends BaseGameScene {
 
   protected playMusic(): void {
     this.startMusic('music_dungeon');
+
+    // Ambient dust motes
+    for (let i = 0; i < 6; i++) {
+      const dust = this.add.rectangle(
+        Math.random() * this.mapWidth, Math.random() * this.mapHeight,
+        1, 1, 0xccaa88
+      ).setDepth(15).setAlpha(0);
+      this.tweens.add({
+        targets: dust, alpha: 0.4, duration: 2000, yoyo: true, repeat: -1,
+        delay: Math.random() * 3000,
+      });
+      this.tweens.add({
+        targets: dust,
+        x: dust.x + (Math.random() - 0.5) * 60,
+        y: dust.y - 20 - Math.random() * 40,
+        duration: 4000 + Math.random() * 3000, yoyo: true, repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    }
   }
 }

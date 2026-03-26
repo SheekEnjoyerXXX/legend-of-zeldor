@@ -235,6 +235,68 @@ export const DIALOG: Record<string, DialogSequence> = {
     { speaker: 'Pick the Pickle', text: 'Until we meet again, in this life or the next brine.' },
   ],
 
+  // === HOME INTERIORS ===
+  elder_home: [
+    { speaker: 'Elder Grumbold', text: 'What— You just WALKED into my house?!' },
+    { speaker: 'Elder Grumbold', text: 'In my day we had LOCKS. And MANNERS.' },
+    { speaker: 'Elder Grumbold', text: 'Fine. Look around. Don\'t touch my turnip collection.' },
+  ],
+  kluk_home: [
+    { speaker: 'Farmer Kluk', text: 'Hey! This is my private chicken-free sanctuary!' },
+    { speaker: 'Farmer Kluk', text: 'Do you people not understand DOORS?!' },
+    { speaker: 'Farmer Kluk', text: 'Whatever. Wipe your boots.' },
+  ],
+  yorb_home: [
+    { speaker: 'Kebabi Yorb', text: 'HOSGELDINIZ! Welcome to Yorb\'s Legendary Doner Palace!' },
+    { speaker: 'Kebabi Yorb', text: 'Best doner in all of Mudfork! Also the only doner! Also I sell weapons sometimes!' },
+  ],
+  yorb_shop_talk1: [
+    { speaker: 'Kebabi Yorb', text: 'I used to be an adventurer like you. Then I discovered spices.' },
+    { speaker: 'Kebabi Yorb', text: 'Now I spit-roast meat on a vertical rotisserie of DESTINY.' },
+  ],
+  yorb_shop_talk2: [
+    { speaker: 'Kebabi Yorb', text: 'My great-grandfather invented the doner kebab in 1856.' },
+    { speaker: 'Kebabi Yorb', text: 'Or was it 1972? History is confusing. The point is: MEAT.' },
+  ],
+  yorb_shop_talk3: [
+    { speaker: 'Kebabi Yorb', text: 'That ogre Shreek ordered 40 doners once. Never paid.' },
+    { speaker: 'Kebabi Yorb', text: 'If you defeat him, tell him he owes me 200 Zlorps.' },
+  ],
+  yorb_shop_talk4: [
+    { speaker: 'Kebabi Yorb', text: 'The secret ingredient? Love. And also an unreasonable amount of garlic sauce.' },
+  ],
+  yorb_shop_buy: [
+    { speaker: 'Kebabi Yorb', text: 'What catches your eye, little warrior? Everything is fresh! ...mostly!' },
+  ],
+  yorb_shop_sell: [
+    { speaker: 'Kebabi Yorb', text: 'You want to SELL things? To ME? At MY doner restaurant?' },
+    { speaker: 'Kebabi Yorb', text: 'I only accept meat-based currencies. And Zlorps. Fine, show me.' },
+  ],
+  yorb_shop_no_money: [
+    { speaker: 'Kebabi Yorb', text: 'You don\'t have enough Zlorps! Come back when you have real money!' },
+    { speaker: 'Kebabi Yorb', text: 'Or defeat some monsters! They drop coins! It\'s a whole economy!' },
+  ],
+  yorb_shop_thanks: [
+    { speaker: 'Kebabi Yorb', text: 'Excellent purchase! May the spices guide your blade!' },
+  ],
+  yorb_shop_exit: [
+    { speaker: 'Kebabi Yorb', text: 'Come back soon! And tell your friends! I accept group bookings!' },
+  ],
+  empty_hut: [
+    { speaker: '', text: 'The hut is abandoned. Cobwebs everywhere.' },
+    { speaker: '', text: 'Someone scratched "SHREEK SUCKS" into the wall.' },
+  ],
+
+  // === STORY HINTS (stage-aware) ===
+  elder_after_sword: [
+    { speaker: 'Elder Grumbold', text: 'You have the Legend Sword! Now head EAST to the Fields!' },
+    { speaker: 'Elder Grumbold', text: 'Beyond the Fields lie the Gates of Time. Zeldor awaits!' },
+  ],
+  elder_after_gates: [
+    { speaker: 'Elder Grumbold', text: 'You braved the Gates? Incredible!' },
+    { speaker: 'Elder Grumbold', text: 'Navigate the Digital Realm, defeat whatever lurks below.' },
+  ],
+
   // === GENERIC ===
   locked_door: [
     { speaker: '', text: 'The door is locked. You need a key.' },

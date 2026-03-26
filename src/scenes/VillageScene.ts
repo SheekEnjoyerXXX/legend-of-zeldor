@@ -1,6 +1,7 @@
 import { BaseGameScene } from './BaseGameScene';
 import { SCENES, TILE_SIZE } from '../game/constants';
 import { DIALOG } from '../data/dialog';
+import Phaser from 'phaser';
 
 export class VillageScene extends BaseGameScene {
   private chickensChased = 0;
@@ -62,6 +63,12 @@ export class VillageScene extends BaseGameScene {
     this.buildHut(3, 17, 4, 3, 'Yorb\'s Shop');
     this.buildHut(20, 17, 3, 3, 'Empty Hut');
 
+    // Door enter zones (interact near door to enter) — generous range of 28px
+    this.addDoorZone(5 * T + T / 2, 5 * T + T / 2, SCENES.INTERIOR, { interiorKey: 'elder_hut' }, 28);
+    this.addDoorZone(22 * T + T / 2, 5 * T + T / 2, SCENES.INTERIOR, { interiorKey: 'kluk_hut' }, 28);
+    this.addDoorZone(5 * T + T / 2, 19 * T + T / 2, SCENES.INTERIOR, { interiorKey: 'yorb_hut' }, 28);
+    this.addDoorZone(21 * T + T / 2, 19 * T + T / 2, SCENES.INTERIOR, { interiorKey: 'empty_hut' }, 28);
+
     // Trees
     const treePositions = [
       [1.5, 6], [1.5, 10], [1.5, 15], [28, 6], [28, 10], [28, 18],
@@ -77,25 +84,11 @@ export class VillageScene extends BaseGameScene {
     this.addPots([[10, 8], [11, 8], [10, 9], [18, 8], [19, 8]]);
 
     // Save crystal near village center
-    const crystal = this.add.rectangle(15 * T, 10 * T, 8, 12, 0x44aaff).setDepth(4);
-    this.tweens.add({ targets: crystal, alpha: 0.5, duration: 1000, yoyo: true, repeat: -1 });
-    // Save on interact near crystal
-    this.time.addEvent({
-      delay: 200, loop: true, callback: () => {
-        if (!this.dialog.active && !this.isPaused) {
-          const dist = Phaser.Math.Distance.Between(
-            this.player.sprite.x, this.player.sprite.y, 15 * T, 10 * T
-          );
-          if (dist < 20 && this.player.isKeyJustDown('e')) {
-            this.saveCheckpoint(15 * T, 10 * T + 20);
-          }
-        }
-      },
-    });
+    this.spawnSaveCrystal(15 * T, 10 * T);
 
-    // Transitions
-    this.addTransition(SCENES.SHRINE, 13 * T, 0, 4 * T, T, 240, 380);
-    this.addTransition(SCENES.FIELDS, 29 * T, 11 * T, T, 4 * T, 20, 200);
+    // Transitions — thick trigger rects (2 tiles deep) so player doesn't need to hit exact wall edge
+    this.addTransition(SCENES.SHRINE, 13 * T, 0, 4 * T, 2 * T, 240, 380);
+    this.addTransition(SCENES.FIELDS, 28 * T, 11 * T, 2 * T, 4 * T, 20, 200);
   }
 
   private buildHut(x: number, y: number, w: number, h: number, _name: string): void {
@@ -145,21 +138,7 @@ export class VillageScene extends BaseGameScene {
   }
 
   private smashPot(pot: Phaser.Physics.Arcade.Sprite): void {
-    // Particle effect
-    for (let i = 0; i < 5; i++) {
-      const p = this.add.rectangle(
-        pot.x + (Math.random() - 0.5) * 10,
-        pot.y + (Math.random() - 0.5) * 10,
-        3, 3, 0x996644
-      ).setDepth(12);
-      this.tweens.add({
-        targets: p,
-        x: p.x + (Math.random() - 0.5) * 30,
-        y: p.y - 10 - Math.random() * 20,
-        alpha: 0, duration: 400,
-        onComplete: () => p.destroy(),
-      });
-    }
+    this.spawnHitParticles(pot.x, pot.y, 0x996644, 5);
     pot.destroy();
 
     // Random drop
@@ -181,6 +160,10 @@ export class VillageScene extends BaseGameScene {
       key: 'elder', spriteKey: 'villager_elder',
       x: 5 * T, y: 7 * T,
       dialogKey: 'village_elder',
+      dialogStages: [
+        { flag: 'has_legend_sword', dialogKey: 'elder_after_sword' },
+        { flag: 'gatekeeper_defeated', dialogKey: 'elder_after_gates' },
+      ],
     });
 
     this.spawnNPC({
@@ -211,7 +194,7 @@ export class VillageScene extends BaseGameScene {
 
     this.spawnNPC({
       key: 'merchant', spriteKey: 'merchant',
-      x: 5 * T, y: 21 * T,
+      x: 4 * T, y: 22 * T,
       dialogKey: 'village_merchant',
     });
 
@@ -237,6 +220,12 @@ export class VillageScene extends BaseGameScene {
     this.spawnPickup({
       type: 'heart', spriteKey: 'heart_pickup',
       x: 16 * T, y: 15 * T,
+    });
+
+    // Banana Blade - hidden behind the empty hut
+    this.spawnPickup({
+      type: 'item', itemKey: 'banana_sword', spriteKey: 'banana',
+      x: 22 * T, y: 21 * T,
     });
   }
 
@@ -296,6 +285,9 @@ export class VillageScene extends BaseGameScene {
   }
 
   protected onDialogComplete(npcKey: string, dialogKey: string): void {
+    if (npcKey === 'elder' && dialogKey === 'village_elder') {
+      this.quest.setFlag('talked_to_elder');
+    }
     if (npcKey === 'pickle_first') {
       this.quest.setFlag('met_pickle');
       // Give a random item
@@ -308,5 +300,24 @@ export class VillageScene extends BaseGameScene {
 
   protected playMusic(): void {
     this.startMusic('music_village');
+
+    // Ambient fireflies
+    for (let i = 0; i < 8; i++) {
+      const fly = this.add.rectangle(
+        Math.random() * this.mapWidth, Math.random() * this.mapHeight,
+        2, 2, 0xffff66
+      ).setDepth(15).setAlpha(0);
+      this.tweens.add({
+        targets: fly, alpha: 0.7, duration: 1000 + Math.random() * 1000,
+        yoyo: true, repeat: -1, delay: Math.random() * 2000,
+      });
+      this.tweens.add({
+        targets: fly,
+        x: fly.x + (Math.random() - 0.5) * 80,
+        y: fly.y + (Math.random() - 0.5) * 80,
+        duration: 3000 + Math.random() * 3000, yoyo: true, repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    }
   }
 }

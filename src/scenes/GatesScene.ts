@@ -58,7 +58,7 @@ export class GatesScene extends BaseGameScene {
     this.addWallRect(6 * T, 22 * T, 4, 2, 'tile_hut');
 
     // Transitions
-    this.addTransition(SCENES.FIELDS, 13 * T, (rows - 1) * T, 4 * T, T, 288, 20);
+    this.addTransition(SCENES.FIELDS, 13 * T, (rows - 2) * T, 4 * T, 2 * T, 288, 20);
   }
 
   private createSwitch(x: number, y: number): void {
@@ -88,6 +88,9 @@ export class GatesScene extends BaseGameScene {
   populate(): void {
     const T = TILE_SIZE;
 
+    // Mark reaching gates for story progression
+    this.quest.setFlag('reached_gates');
+
     // Enemies
     this.spawnEnemy(6 * T, 10 * T, 'firewall_skeleton');
     this.spawnEnemy(24 * T, 10 * T, 'firewall_skeleton');
@@ -109,19 +112,14 @@ export class GatesScene extends BaseGameScene {
     this.spawnPickup({ type: 'ammo', spriteKey: 'ammo_pickup', x: 26 * T, y: 20 * T });
     this.spawnPickup({ type: 'key', spriteKey: 'key', x: 15 * T, y: 16 * T });
 
-    // Save point
-    const crystal = this.add.rectangle(15 * T, 26 * T, 8, 12, 0x44aaff).setDepth(4);
-    this.tweens.add({ targets: crystal, alpha: 0.5, duration: 1000, yoyo: true, repeat: -1 });
-    this.time.addEvent({
-      delay: 200, loop: true, callback: () => {
-        if (!this.dialog.active) {
-          const dist = Phaser.Math.Distance.Between(this.player.sprite.x, this.player.sprite.y, crystal.x, crystal.y);
-          if (dist < 20 && this.player.isKeyJustDown('e')) {
-            this.saveCheckpoint(crystal.x, crystal.y + 20);
-          }
-        }
-      },
+    // Cursed Spoon - hidden in the corridor
+    this.spawnPickup({
+      type: 'item', itemKey: 'cursed_spoon', spriteKey: 'key',
+      x: 4 * T, y: 10 * T,
     });
+
+    // Save point
+    this.spawnSaveCrystal(15 * T, 26 * T);
   }
 
   private spawnGatekeeper(): void {

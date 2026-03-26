@@ -10,8 +10,16 @@ export interface InventoryState {
   hasLegendSword: boolean;
   hasShield: boolean;
   hasBlaster: boolean;
-  selectedWeapon: 'sword' | 'blaster';
+  equippedWeapon: string;
+  weapons: string[];
 }
+
+/** Item keys that set boolean flags on state when acquired */
+const FLAG_ITEMS: Record<string, keyof Pick<InventoryState, 'hasLegendSword' | 'hasShield' | 'hasBlaster'>> = {
+  legend_sword: 'hasLegendSword',
+  shield: 'hasShield',
+  blaster: 'hasBlaster',
+};
 
 export class InventorySystem {
   private scene: Phaser.Scene;
@@ -29,7 +37,8 @@ export class InventorySystem {
       hasLegendSword: false,
       hasShield: false,
       hasBlaster: false,
-      selectedWeapon: 'sword',
+      equippedWeapon: 'fists',
+      weapons: [],
       ...initialState,
     };
 
@@ -38,7 +47,6 @@ export class InventorySystem {
   }
 
   private buildUI(): void {
-    // Background overlay
     const bg = this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH - 40, GAME_HEIGHT - 40, 0x111122, 0.95)
       .setScrollFactor(0);
     const border = this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH - 36, GAME_HEIGHT - 36)
@@ -85,9 +93,12 @@ export class InventorySystem {
     addLine(`Ammo: ${this.state.ammo}`);
     addLine('');
     addLine('-- Weapons --');
-    if (this.state.hasLegendSword) addLine(`  Legend Sword ${this.state.selectedWeapon === 'sword' ? '[EQUIPPED]' : ''}`);
+    addLine(`  Fists ${this.state.equippedWeapon === 'fists' ? '[EQUIPPED]' : ''}`);
     if (this.state.hasShield) addLine('  Ditch Shield');
-    if (this.state.hasBlaster) addLine(`  A-OK 47 ${this.state.selectedWeapon === 'blaster' ? '[EQUIPPED]' : ''}`);
+    for (const wKey of this.state.weapons) {
+      const wName = this.getWeaponNameByKey(wKey);
+      addLine(`  ${wName} ${wKey === this.state.equippedWeapon ? '[EQUIPPED]' : ''}`);
+    }
     addLine('');
     addLine('-- Items --');
     const itemCounts = new Map<string, number>();
@@ -106,13 +117,53 @@ export class InventorySystem {
     addLine('[I] Close   [J/K] Switch Weapon');
   }
 
+  addWeapon(key: string): void {
+    if (!this.state.weapons.includes(key)) {
+      this.state.weapons.push(key);
+    }
+    this.state.equippedWeapon = key;
+  }
+
+  cycleWeapon(): void {
+    const allWeapons = ['fists', ...this.state.weapons];
+    const idx = allWeapons.indexOf(this.state.equippedWeapon);
+    this.state.equippedWeapon = allWeapons[(idx + 1) % allWeapons.length];
+  }
+
+  getWeaponDamage(): number {
+    const def = ITEMS[this.state.equippedWeapon];
+    return def?.damage ?? 1;
+  }
+
+  getWeaponName(): string {
+    return this.getWeaponNameByKey(this.state.equippedWeapon);
+  }
+
+  getWeaponNameByKey(key: string): string {
+    const def = ITEMS[key];
+    return def?.name ?? 'Fists';
+  }
+
   addItem(key: string): void {
-    if (key === 'legend_sword') { this.state.hasLegendSword = true; return; }
-    if (key === 'shield') { this.state.hasShield = true; return; }
-    if (key === 'blaster') { this.state.hasBlaster = true; return; }
+    // Set boolean flags for special items
+    const flagKey = FLAG_ITEMS[key];
+    if (flagKey) {
+      this.state[flagKey] = true;
+    }
+
+    // Weapons get added to the weapon list and auto-equipped
+    const def = ITEMS[key];
+    if (def?.type === 'weapon' && key !== 'shield') {
+      this.addWeapon(key);
+      return;
+    }
+    if (key === 'shield') return;
+
+    // Currency / stackables handled directly
     if (key === 'zlorp') { this.state.zlorps += 1; return; }
     if (key === 'key') { this.state.keys += 1; return; }
     if (key === 'ammo') { this.state.ammo += 5; return; }
+
     this.state.items.push(key);
   }
 
@@ -123,9 +174,8 @@ export class InventorySystem {
   }
 
   hasItem(key: string): boolean {
-    if (key === 'legend_sword') return this.state.hasLegendSword;
-    if (key === 'shield') return this.state.hasShield;
-    if (key === 'blaster') return this.state.hasBlaster;
+    const flagKey = FLAG_ITEMS[key];
+    if (flagKey) return this.state[flagKey];
     return this.state.items.includes(key);
   }
 
@@ -140,12 +190,6 @@ export class InventorySystem {
   }
 
   addZlorps(amount: number): void { this.state.zlorps += amount; }
-
-  switchWeapon(): void {
-    if (this.state.hasBlaster && this.state.hasLegendSword) {
-      this.state.selectedWeapon = this.state.selectedWeapon === 'sword' ? 'blaster' : 'sword';
-    }
-  }
 
   getState(): InventoryState { return this.state; }
   get opened(): boolean { return this.isOpen; }

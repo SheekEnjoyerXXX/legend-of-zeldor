@@ -1,8 +1,9 @@
 import { BaseGameScene } from './BaseGameScene';
-import { SCENES, TILE_SIZE, COLORS } from '../game/constants';
+import { SCENES, TILE_SIZE } from '../game/constants';
 
 export class MemeSewersScene extends BaseGameScene {
   private bossDefeated = false;
+  private toxicZoneObjects: Phaser.GameObjects.Zone[] = [];
 
   constructor() {
     super(SCENES.SEWERS);
@@ -60,16 +61,12 @@ export class MemeSewersScene extends BaseGameScene {
           });
         }
       }
-      // Damage zone
+      // Damage zone - overlap registered in populate() after player exists
       const zone = this.add.zone(
         (tx + tw / 2) * T, (ty + th / 2) * T, tw * T, th * T
       );
       this.physics.add.existing(zone, true);
-      this.physics.add.overlap(this.player?.sprite ?? this.add.zone(0, 0, 0, 0), zone, () => {
-        if (!this.player.invulnerable) {
-          this.combat.dealDamage(this.player, 1, { x: zone.x, y: zone.y });
-        }
-      });
+      this.toxicZoneObjects.push(zone);
     }
 
     // Garbage pixel decorations
@@ -87,11 +84,23 @@ export class MemeSewersScene extends BaseGameScene {
     this.addWallRect(23 * T, 3 * T, 1, 4, 'tile_sewer_wall');
 
     // Transitions
-    this.addTransition(SCENES.DIGITAL, 13 * T, (rows - 1) * T, 4 * T, T, 240, 40);
+    this.addTransition(SCENES.DIGITAL, 13 * T, (rows - 2) * T, 4 * T, 2 * T, 240, 40);
   }
 
   populate(): void {
     const T = TILE_SIZE;
+
+    // Mark reaching sewers for story progression
+    this.quest.setFlag('reached_sewers');
+
+    // Register toxic zone overlaps now that player exists
+    for (const zone of this.toxicZoneObjects) {
+      this.physics.add.overlap(this.player.sprite, zone, () => {
+        if (!this.player.invulnerable) {
+          this.combat.dealDamage(this.player, 1, { x: zone.x, y: zone.y });
+        }
+      });
+    }
 
     // Entrance dialog
     this.time.delayedCall(500, () => {
@@ -130,19 +139,14 @@ export class MemeSewersScene extends BaseGameScene {
     this.spawnPickup({ type: 'ammo', spriteKey: 'ammo_pickup', x: 15 * T, y: 12 * T });
     this.spawnPickup({ type: 'zlorp', spriteKey: 'zlorp', x: 8 * T, y: 10 * T });
 
-    // Save point
-    const crystal = this.add.rectangle(15 * T, 24 * T, 8, 12, 0x44aaff).setDepth(4);
-    this.tweens.add({ targets: crystal, alpha: 0.5, duration: 1000, yoyo: true, repeat: -1 });
-    this.time.addEvent({
-      delay: 200, loop: true, callback: () => {
-        if (!this.dialog.active) {
-          const dist = Phaser.Math.Distance.Between(this.player.sprite.x, this.player.sprite.y, crystal.x, crystal.y);
-          if (dist < 20 && this.player.isKeyJustDown('e')) {
-            this.saveCheckpoint(crystal.x, crystal.y + 20);
-          }
-        }
-      },
+    // Toilet Plunger of Destiny - deep in the sewers
+    this.spawnPickup({
+      type: 'item', itemKey: 'toilet_plunger', spriteKey: 'torch',
+      x: 26 * T, y: 26 * T,
     });
+
+    // Save point
+    this.spawnSaveCrystal(15 * T, 24 * T);
   }
 
   private spawnKingSlop(): void {
@@ -293,10 +297,23 @@ export class MemeSewersScene extends BaseGameScene {
         if (Math.abs(sprite.x - (x * T + T / 2)) < 2 && sprite.y < 2 * T) sprite.destroy();
       });
     }
-    this.addTransition(SCENES.FORTRESS, 13 * T, 0, 4 * T, T, 240, 440);
+    this.addTransition(SCENES.FORTRESS, 13 * T, 0, 4 * T, 2 * T, 240, 440);
   }
 
   protected playMusic(): void {
     this.startMusic('music_dungeon');
+
+    // Dripping toxic particles from ceiling
+    this.time.addEvent({
+      delay: 800, loop: true, callback: () => {
+        const dx = 3 * TILE_SIZE + Math.random() * 24 * TILE_SIZE;
+        const drop = this.add.rectangle(dx, 2 * TILE_SIZE, 2, 2, 0x44ff44, 0.7).setDepth(15);
+        this.tweens.add({
+          targets: drop, y: drop.y + 40 + Math.random() * 60, alpha: 0,
+          duration: 800, ease: 'Quad.easeIn',
+          onComplete: () => drop.destroy(),
+        });
+      },
+    });
   }
 }
